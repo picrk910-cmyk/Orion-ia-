@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orion IA</title>
+<style>
+:root{
+  --bg:#0b0d12;--panel:#121620;--panel2:#1a2030;--text:#f4f7fb;
+  --muted:#9ca8bd;--line:#293246;--accent:#7c5cff;--accent2:#25c6a8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;height:100vh;overflow:hidden}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;height:100vh}
+.sidebar{width:280px;background:var(--panel);border-right:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:16px;transition:.25s}
+.brand{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:800}
+.logo{width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,var(--accent),#28c6dd);display:grid;place-items:center;font-weight:900}
+.newchat,.tool{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:12px;text-align:left}
+.newchat:hover,.tool:hover{border-color:var(--accent)}
+.section-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.history{overflow:auto;flex:1;display:flex;flex-direction:column;gap:5px}
+.history button{border:0;background:transparent;color:var(--muted);padding:10px;border-radius:9px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history button:hover{background:var(--panel2);color:var(--text)}
+.sidebar-bottom{display:grid;gap:8px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.top-title{font-weight:750}
+.status{font-size:12px;color:var(--accent2)}
+.icon-btn{background:transparent;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.mobile-menu{display:none}
+.chat{flex:1;overflow:auto;padding:28px 16px 170px}
+.welcome{max-width:850px;margin:9vh auto 0;text-align:center}
+.welcome h1{font-size:clamp(30px,5vw,54px);margin:0 0 12px;background:linear-gradient(90deg,#fff,#9c8aff,#53d9e5);-webkit-background-clip:text;color:transparent}
+.welcome p{color:var(--muted);font-size:16px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:30px}
+.card{padding:17px;border:1px solid var(--line);border-radius:15px;background:var(--panel);text-align:left}
+.card strong{display:block;margin-bottom:6px}.card span{font-size:13px;color:var(--muted)}
+.messages{max-width:850px;margin:auto;display:flex;flex-direction:column;gap:18px}
+.message{display:flex;gap:12px;line-height:1.6;animation:appear .2s ease}
+.avatar{width:34px;height:34px;min-width:34px;border-radius:11px;background:var(--panel2);display:grid;place-items:center;font-size:13px;font-weight:800}
+.message.user .avatar{background:var(--accent)}
+.bubble{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+.composer-wrap{position:fixed;bottom:0;left:280px;right:0;padding:18px 16px 22px;background:linear-gradient(transparent,var(--bg) 25%)}
+.composer{max-width:850px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 10px 40px #0005}
+textarea{width:100%;resize:none;min-height:48px;max-height:150px;background:transparent;border:0;outline:0;color:var(--text);padding:9px}
+.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tools{display:flex;gap:7px}
+.tool-mini{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12px}
+.send{background:var(--accent);border:0;color:white;border-radius:11px;padding:10px 15px;font-weight:800}
+.send:disabled{opacity:.45}
+.disclaimer{text-align:center;font-size:11px;color:var(--muted);margin-top:9px}
+@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){
+ .sidebar{position:fixed;z-index:5;left:-290px;top:0;bottom:0}.sidebar.open{left:0}
+ .mobile-menu{display:block}.topbar{padding:0 14px}
+ .composer-wrap{left:0;padding:12px 10px 15px}
+ .cards{grid-template-columns:1fr}.welcome{margin-top:7vh}
+ .chat{padding-top:20px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">O</div> Orion IA</div>
+    <button class="newchat" id="newChat">＋ Nouvelle conversation</button>
+    <div class="section-title">Historique</div>
+    <div class="history" id="history"></div>
+    <div class="sidebar-bottom">
+      <button class="tool" id="themeBtn">🌙 Changer le thème</button>
+      <button class="tool" id="clearBtn">🗑️ Effacer l'historique</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="icon-btn mobile-menu" id="menuBtn">☰</button>
+        <div class="top-title">Orion IA <span style="color:var(--muted);font-weight:400">· Assistant</span></div>
+      </div>
+      <div class="status">● Interface prête</div>
+    </header>
+
+    <section class="chat" id="chat">
+      <div class="welcome" id="welcome">
+        <h1>Que puis-je faire pour toi ?</h1>
+        <p>Un espace simple pour discuter, travailler et créer.</p>
+        <div class="cards">
+          <button class="card" data-prompt="Aide-moi à créer un jeu HTML"><strong>🎮 Créer un jeu</strong><span>Imaginer et développer un jeu web.</span></button>
+          <button class="card" data-prompt="Explique-moi un cours simplement"><strong>📚 Apprendre</strong><span>Obtenir une explication claire.</span></button>
+          <button class="card" data-prompt="Donne-moi une idée de projet"><strong>💡 Trouver une idée</strong><span>Développer un projet créatif.</span></button>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+    </section>
+
+    <div class="composer-wrap">
+      <form class="composer" id="form">
+        <textarea id="input" placeholder="Message à Orion IA..." rows="1"></textarea>
+        <div class="composer-bottom">
+          <div class="tools">
+            <button type="button" class="tool-mini" id="attachBtn">📎 Fichier</button>
+            <button type="button" class="tool-mini" id="imageBtn">🖼️ Image</button>
+            <input type="file" id="fileInput" hidden>
+          </div>
+          <button class="send" id="send" disabled>Envoyer ↑</button>
+        </div>
+      </form>
+      <div class="disclaimer">Version de test • Tes conversations restent dans ce navigateur.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const input = $("input"), send = $("send"), messages = $("messages"), welcome = $("welcome");
+let conversations = JSON.parse(localStorage.getItem("orionHistory") || "[]");
+let current = [];
+
+function save(){localStorage.setItem("orionHistory",JSON.stringify(conversations))}
+function renderHistory(){
+  $("history").innerHTML="";
+  conversations.slice().reverse().forEach((c,i)=>{
+    const b=document.createElement("button");
+    b.textContent=c.title;
+    b.onclick=()=>loadConversation(conversations.length-1-i);
+    $("history").appendChild(b);
+  });
+}
+function addMessage(role,text){
+  welcome.style.display="none";
+  const row=document.createElement("div");
+  row.className="message "+role;
+  const avatar=document.createElement("div");
+  avatar.className="avatar";avatar.textContent=role==="user"?"U":"O";
+  const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=text;
+  row.append(avatar,bubble);messages.appendChild(row);
+  $("chat").scrollTop=$("chat").scrollHeight;
+}
+function loadConversation(index){
+  current=conversations[index]?.messages || [];
+  messages.innerHTML="";welcome.style.display=current.length?"none":"block";
+  current.forEach(m=>addMessage(m.role,m.text));
+}
+function startNew(){
+  if(current.length){
+    conversations.push({title:current[0].text.slice(0,35),messages:current});
+    save();input.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    if(input.value.trim()) $("form").requestSubmit();
+  }
+});
+renderHistory();
+  }
+  current=[];messages.innerHTML="";welcome.style.display="block";input.value="";update();
+}
+function update(){send.disabled=input.value.trim().length===0}
+input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,150)+"px";update()});
+$("form").addEventListener("submit",e=>{
+  e.preventDefault();const text=input.value.trim();if(!text)return;
+  addMessage("user",text);current.push({role:"user",text});
+  input.value="";input.style.height="auto";update();
+  setTimeout(()=>{
+    const reply="Je suis encore en version locale, mais j’ai bien reçu ton message : "+text;
+    addMessage("assistant",reply);current.push({role:"assistant",text:reply});
+  },450);
+});
+document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{input.value=b.dataset.prompt;update();input.focus()});
+$("newChat").onclick=startNew;
+$("clearBtn").onclick=()=>{if(confirm("Effacer l'historique local ?")){conversations=[];save();renderHistory()}};
+$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
+$("themeBtn").onclick=()=>{
+ const light=document.body.dataset.theme!=="light";
+ document.body.dataset.theme=light?"light":"dark";
+ if(light){document.documentElement.style.setProperty("--bg","#f3f5fa");document.documentElement.style.setProperty("--panel","#fff");document.documentElement.style.setProperty("--panel2","#eef1f8");document.documentElement.style.setProperty("--text","#111827");document.documentElement.style.setProperty("--muted","#687386");document.documentElement.style.setProperty("--line","#dce1eb")}
+ else location.reload();
+};
+$("attachBtn").onclick=()=>$("fileInput").click();
+$("fileInput").onchange=e=>{if(e.target.files[0]){input.value+=" [Fichier sélectionné : "+e.target.files[0].name+"]";update()}};
+$("imageBtn").onclick=()=>{input.value="Je veux générer une image : ";update();input.focus()};
+renderHistory();
+</script>
+</body>
+</html>
